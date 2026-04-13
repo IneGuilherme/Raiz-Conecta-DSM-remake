@@ -11,7 +11,7 @@ export function SiteHeader() {
                 </Link>
                 <div className="flex gap-3">
                     <Link href="/login" className="px-4 py-2 text-green-700 font-medium hover:bg-green-50 rounded-lg">Entrar</Link>
-                    <Link href="/cadastro" className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700">
+                    <Link href="/login" className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700">
                         Cadastre-se
                     </Link>
                 </div>

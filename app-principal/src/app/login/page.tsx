@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Leaf } from "lucide-react";
 import { useFormik } from "formik";
@@ -10,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
 export default function LoginPage() {
+    const router = useRouter(); // Ativando o roteador do Next.js
     const [isLogin, setIsLogin] = useState(true);
     const [tipoUsuario, setTipoUsuario] = useState<"produtor" | "mercado">("produtor");
 
@@ -23,21 +25,71 @@ export default function LoginPage() {
             email: "",
             senha: "",
         },
-        // Ele troca o esquema de validação dependendo se estamos na aba de Login ou Cadastro
         validationSchema: isLogin ? loginSchema : cadastroSchema,
-        onSubmit: async (values) => {
-            // Quando a pessoa clicar no botão e estiver tudo certo, cai aqui!
+        onSubmit: async (values, { setSubmitting, setFieldError }) => {
             if (isLogin) {
-                console.log("Tentando logar com:", values.email, values.senha);
-                alert("Chamaria a API de Login agora!");
+                // LÓGICA DE LOGIN REAL
+                try {
+                    const resposta = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: values.email, senha: values.senha }),
+                    });
+
+                    const dados = await resposta.json();
+
+                    if (!resposta.ok) {
+                        setFieldError("senha", dados.error || "Erro ao fazer login");
+                        return;
+                    }
+
+                    // Redirecionamento Inteligente baseado no Perfil (Os 3 usuários)
+                    if (dados.tipoUser === "produtor") {
+                        router.push("/produtor");
+                    } else if (dados.tipoUser === "mercado") {
+                        router.push("/checkout");
+                    } else if (dados.tipoUser === "admin") {
+                        router.push("/admin");
+                    } else {
+                        router.push("/"); // Fallback de segurança
+                    }
+
+                } catch (erro) {
+                    console.error("Erro no login:", erro);
+                    alert("Erro de conexão com o servidor.");
+                } finally {
+                    setSubmitting(false);
+                }
             } else {
-                console.log("Tentando cadastrar novo usuário:", values);
-                alert("Chamaria a API de Cadastro agora!");
+                // LÓGICA DE CADASTRO
+                try {
+                    const resposta = await fetch('/api/auth/cadastro', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(values),
+                    });
+
+                    const dados = await resposta.json();
+
+                    if (!resposta.ok) {
+                        setFieldError("email", dados.error || "Erro no cadastro");
+                        return;
+                    }
+
+                    alert("Cadastro realizado com sucesso! Você já pode fazer login.");
+                    setIsLogin(true); // Volta para a aba de login
+                    formik.resetForm(); // Limpa os campos
+
+                } catch (erro) {
+                    console.error("Erro no fetch:", erro);
+                    alert("Erro de conexão com o servidor.");
+                } finally {
+                    setSubmitting(false);
+                }
             }
         },
     });
 
-    // Função para mudar a aba e limpar os erros do formulário
     const alternarAba = (modoLogin: boolean) => {
         setIsLogin(modoLogin);
         formik.resetForm();
@@ -154,8 +206,8 @@ export default function LoginPage() {
                             error={formik.touched.senha ? formik.errors.senha : undefined}
                         />
 
-                        <Button fullWidth className="mt-6" type="submit">
-                            {isLogin ? "Entrar na Plataforma" : "Finalizar Cadastro"}
+                        <Button fullWidth className="mt-6" type="submit" disabled={formik.isSubmitting}>
+                            {formik.isSubmitting ? "Aguarde..." : (isLogin ? "Entrar na Plataforma" : "Finalizar Cadastro")}
                         </Button>
                     </form>
                 </Card>
