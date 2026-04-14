@@ -52,7 +52,8 @@ model Vendedor {
   email        String?
   telefone     String?
   status       String?
-  
+  urlDocumento String?
+
   Acessos      Acesso[]
   ItensPedido  ItemPedido[]
   Estoques     Prod_Vendedor_Possui[]

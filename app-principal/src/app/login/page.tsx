@@ -42,6 +42,8 @@ export default function LoginPage() {
                         setFieldError("senha", dados.error || "Erro ao fazer login");
                         return;
                     }
+                    
+                    localStorage.setItem("userEmail", values.email);
 
                     // Redirecionamento Inteligente baseado no Perfil (Os 3 usuários)
                     if (dados.tipoUser === "produtor") {
@@ -75,6 +77,8 @@ export default function LoginPage() {
                         setFieldError("email", dados.error || "Erro no cadastro");
                         return;
                     }
+
+                    localStorage.setItem("userEmail", values.email);
 
                     alert("Cadastro realizado com sucesso! Você já pode fazer login.");
                     setIsLogin(true); // Volta para a aba de login
