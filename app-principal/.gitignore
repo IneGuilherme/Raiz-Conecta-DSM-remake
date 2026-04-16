@@ -4,32 +4,27 @@
 node_modules/
 .pnp
 .pnp.*
-
 # ==========================================
 # 🔐 SEGURANÇA (NUNCA SUBIR PARA O GITHUB)
 # ==========================================
 .env
 .env.*
 *.pem
-
 # ==========================================
 # 🚀 NEXT.JS (app-principal)
 # ==========================================
 .next/
 out/
 next-env.d.ts
-
 # ==========================================
 # 🏗️ BUILDS DO SERVIDOR
 # ==========================================
 dist/
 build/
-
 # ==========================================
 # 🗄️ PRISMA
 # ==========================================
 # Ignora arquivos de banco SQLite locais (caso decida usar para teste) agora nao tem nada sendo ignorado
-
 
 # ==========================================
 # 🛠️ LOGS E SISTEMA OPERACIONAL
