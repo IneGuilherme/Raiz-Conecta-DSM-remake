@@ -11,11 +11,10 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
 export default function LoginPage() {
-    const router = useRouter(); // Ativando o roteador do Next.js
+    const router = useRouter();
     const [isLogin, setIsLogin] = useState(true);
     const [tipoUsuario, setTipoUsuario] = useState<"produtor" | "mercado">("produtor");
 
-    // Configuração do Formik
     const formik = useFormik({
         initialValues: {
             tipoUsuario: "produtor",
@@ -28,7 +27,9 @@ export default function LoginPage() {
         validationSchema: isLogin ? loginSchema : cadastroSchema,
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
             if (isLogin) {
+                // ==========================
                 // LÓGICA DE LOGIN REAL
+                // ==========================
                 try {
                     const resposta = await fetch('/api/auth/login', {
                         method: 'POST',
@@ -42,10 +43,13 @@ export default function LoginPage() {
                         setFieldError("senha", dados.error || "Erro ao fazer login");
                         return;
                     }
-                    
-                    localStorage.setItem("userEmail", values.email);
 
-                    // Redirecionamento Inteligente baseado no Perfil (Os 3 usuários)
+                    // Salva os dados no navegador para o Header usar
+                    localStorage.setItem("userEmail", values.email);
+                    const nomeProvisorio = values.email.split('@')[0];
+                    localStorage.setItem("userName", nomeProvisorio);
+
+                    // Redirecionamento baseado no Perfil
                     if (dados.tipoUser === "produtor") {
                         router.push("/produtor");
                     } else if (dados.tipoUser === "mercado") {
@@ -53,7 +57,7 @@ export default function LoginPage() {
                     } else if (dados.tipoUser === "admin") {
                         router.push("/admin");
                     } else {
-                        router.push("/"); // Fallback de segurança
+                        router.push("/");
                     }
 
                 } catch (erro) {
@@ -63,7 +67,9 @@ export default function LoginPage() {
                     setSubmitting(false);
                 }
             } else {
+                // ==========================
                 // LÓGICA DE CADASTRO
+                // ==========================
                 try {
                     const resposta = await fetch('/api/auth/cadastro', {
                         method: 'POST',
@@ -78,11 +84,17 @@ export default function LoginPage() {
                         return;
                     }
 
+                    // Salva os dados no navegador logo no cadastro
                     localStorage.setItem("userEmail", values.email);
 
+                    // Se ele preencheu o nome no formulário, a gente usa o nome real!
+                    // Se não, fazemos a quebra pelo email de novo.
+                    const nomeParaSalvar = values.nome ? values.nome.split(' ')[0] : values.email.split('@')[0];
+                    localStorage.setItem("userName", nomeParaSalvar);
+
                     alert("Cadastro realizado com sucesso! Você já pode fazer login.");
-                    setIsLogin(true); // Volta para a aba de login
-                    formik.resetForm(); // Limpa os campos
+                    setIsLogin(true);
+                    formik.resetForm();
 
                 } catch (erro) {
                     console.error("Erro no fetch:", erro);

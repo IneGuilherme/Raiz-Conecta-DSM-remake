@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UploadCloud, Clock, CheckCircle, ShieldCheck } from "lucide-react";
+import { UploadCloud, Clock, CheckCircle, ShieldCheck, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -108,6 +108,43 @@ export default function PainelProdutor() {
                             Você enviou os documentos e agora é um <strong>Broto</strong>! 🌱 <br />
                             Nossa equipe administrativa está conferindo seus dados. Logo você será um produtor raiz com acesso total.
                         </p>
+                    </Card>
+                )}
+
+                {/* NOVO BLOCO: PRODUTOR REJEITADO */}
+                {produtor.status === "REJEITADO" && (
+                    <Card className="p-8 border-red-300 bg-red-50">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-red-100 p-3 rounded-full">
+                                <XCircle className="text-red-600 w-8 h-8" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-red-800">Documentação Recusada</h2>
+                        </div>
+                        <p className="text-red-700 mb-6 font-medium">
+                            Infelizmente não conseguimos validar o documento enviado. A imagem pode estar ilegível ou incorreta.
+                            Por favor, anexe uma nova foto nítida do seu documento para tentarmos novamente.
+                        </p>
+
+                        {/* O mesmo input de arquivo, mas agora vermelho */}
+                        <div className={`border-2 border-dashed p-8 rounded-xl text-center transition-colors ${arquivo ? 'border-red-500 bg-red-100' : 'border-red-300 bg-white hover:bg-red-50'}`}>
+                            <input
+                                type="file"
+                                className="hidden"
+                                id="fileDocRejeitado"
+                                accept="image/*,.pdf"
+                                onChange={(e) => setArquivo(e.target.files?.[0] || null)}
+                            />
+                            <label htmlFor="fileDocRejeitado" className="cursor-pointer block">
+                                <UploadCloud className={`mx-auto w-12 h-12 mb-3 ${arquivo ? 'text-red-600' : 'text-red-400'}`} />
+                                <p className="text-sm font-bold text-red-800">
+                                    {arquivo ? `Novo arquivo: ${arquivo.name}` : "Clique para anexar um NOVO documento"}
+                                </p>
+                            </label>
+                        </div>
+
+                        <Button onClick={enviarParaAnalise} className="mt-6 w-full bg-red-600 hover:bg-red-700 py-6 text-lg">
+                            Reenviar para Análise
+                        </Button>
                     </Card>
                 )}
 

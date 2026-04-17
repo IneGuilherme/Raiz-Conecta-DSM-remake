@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Lato, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
 
-import { SiteHeader } from "@/components/SiteHeader";
+import SiteHeader from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
 const lato = Lato({

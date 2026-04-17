@@ -1,66 +1,108 @@
-// microservico/server.js
+require('dotenv').config();
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 
 const app = express();
 
-// Permite que o nosso App Principal (porta 3000) converse com este microsserviço (porta 3001)
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// 1. Configuração do Mailtrap
+// ⚙️ Configuração do Mailtrap (O "Correio" do nosso sistema)
 const transporter = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 587,
+    host: process.env.EMAIL_HOST || "sandbox.smtp.mailtrap.io",
+    port: process.env.EMAIL_PORT || 587,
     auth: {
-        user: "c70fcdebb7f576",
-        pass: "92799ce10d8a8c"
+        user: process.env.EMAIL_USER, // Pega do arquivo .env do microsserviço
+        pass: process.env.EMAIL_PASS
     }
 });
 
-// 2. Rota que o App Principal vai chamar quando alguém se cadastrar
+// ==========================================
+// 📧 ROTA 1: Boas-vindas (Ao criar a conta)
+// ==========================================
 app.post('/api/email/boas-vindas', async (req, res) => {
-    const { email, nome, tipoUsuario } = req.body;
-
-    console.log(`📩 Recebido pedido de e-mail para: ${email}`);
-
-    // Personaliza a mensagem baseada no tipo de usuário
-    let mensagemHTML = '';
-    if (tipoUsuario === 'produtor') {
-        mensagemHTML = `
-      <h2 style="color: #166534;">Olá ${nome}, bem-vindo ao Raiz Conecta! 🌱</h2>
-      <p>Estamos muito felizes em ter você como nosso Produtor Parceiro.</p>
-      <p>Sua conta está em análise e logo você poderá começar a vender seus produtos frescos diretamente para os mercados da região!</p>
-    `;
-    } else {
-        mensagemHTML = `
-      <h2 style="color: #166534;">Olá ${nome}, bem-vindo ao Raiz Conecta! 🛒</h2>
-      <p>A melhor plataforma para encontrar hortifruti fresco direto da raiz.</p>
-      <p>Acesse o painel para começar a negociar com os produtores locais.</p>
-    `;
-    }
-
+    const { email, nome } = req.body;
     try {
-        // 3. Dispara o e-mail
         await transporter.sendMail({
-            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com>',
+            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
             to: email,
-            subject: "Bem-vindo ao Raiz Conecta! 🌱",
-            html: mensagemHTML
+            subject: "🌱 Bem-vindo ao Raiz Conecta!",
+            html: `
+        <h2>Olá, ${nome || 'Produtor'}!</h2>
+        <p>Que alegria ter você com a gente na plataforma <b>Raiz Conecta</b>.</p>
+        <p>Você acabou de dar o primeiro passo (Nível Semente). Para começar a vender, acesse o sistema e envie a foto do seu documento de identificação.</p>
+        <p>Estamos ansiosos para ver seus produtos!</p>
+      `
         });
-
-        console.log("✅ E-mail enviado com sucesso pro Mailtrap!");
-        res.status(200).json({ message: "E-mail enviado com sucesso!" });
-
+        console.log(`[E-mail Enviado] Boas-vindas para: ${email}`);
+        res.status(200).json({ message: "E-mail enviado com sucesso" });
     } catch (error) {
-        console.error("❌ Erro ao enviar e-mail:", error);
-        res.status(500).json({ error: "Erro interno ao disparar o e-mail." });
+        console.error("Erro ao enviar e-mail:", error);
+        res.status(500).json({ error: "Erro ao enviar e-mail" });
     }
 });
 
-// 4. Liga o Microsserviço na porta 3001 (Para não dar conflito com o Next.js que está na 3000)
-const PORT = 3001;
+// ==========================================
+// 📧 ROTA 2: Aprovação (Nível Raiz)
+// ==========================================
+app.post('/api/email/aprovacao', async (req, res) => {
+    const { email } = req.body;
+    try {
+        await transporter.sendMail({
+            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
+            to: email,
+            subject: "🎉 Aprovado! Você agora é um Produtor Raiz!",
+            html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #16a34a;">Parabéns! Sua documentação foi aprovada. 🌳</h2>
+          <p>Temos o prazer de informar que você atingiu o <b>Nível Raiz</b> na plataforma Raiz Conecta.</p>
+          <p>Seu acesso total foi liberado. A partir de agora, você já pode acessar seu painel e começar a cadastrar seus produtos para venda.</p>
+          <br/>
+          <p>Boas vendas!</p>
+        </div>
+      `
+        });
+        console.log(`[E-mail Enviado] Aprovação para: ${email}`);
+        res.status(200).json({ message: "E-mail de aprovação enviado" });
+    } catch (error) {
+        console.error("Erro ao enviar aprovação:", error);
+        res.status(500).json({ error: "Erro ao enviar e-mail" });
+    }
+});
+
+// ==========================================
+// 📧 ROTA 3: Rejeição (Documento Inválido)
+// ==========================================
+app.post('/api/email/rejeicao', async (req, res) => {
+    const { email } = req.body;
+    try {
+        await transporter.sendMail({
+            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
+            to: email,
+            subject: "⚠️ Atualização sobre sua documentação",
+            html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #dc2626;">Houve um problema com seu documento.</h2>
+          <p>Infelizmente nossa equipe não conseguiu validar a foto do documento enviada em seu cadastro.</p>
+          <p>Isso geralmente ocorre por imagens embaçadas, cortadas ou envio do documento errado.</p>
+          <p><b>Não se preocupe!</b> Acesse seu painel na plataforma Raiz Conecta e anexe uma nova foto nítida para tentarmos novamente.</p>
+        </div>
+      `
+        });
+        console.log(`[E-mail Enviado] Rejeição para: ${email}`);
+        res.status(200).json({ message: "E-mail de rejeição enviado" });
+    } catch (error) {
+        console.error("Erro ao enviar rejeição:", error);
+        res.status(500).json({ error: "Erro ao enviar e-mail" });
+    }
+});
+
+// ==========================================
+// INICIAR O SERVIDOR
+// ==========================================
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`🚀 Microsserviço de E-mail rodando na porta ${PORT}`);
 });
