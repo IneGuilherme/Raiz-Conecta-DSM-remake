@@ -199,3 +199,32 @@ model ColetaEntrega {
   Pedido       Pedido?   @relation(fields: [cdPedidos], references: [cdPedido])
   Rota         Rota?     @relation(fields: [cdRota], references: [cdRota])
 }
+
+// ==========================================
+// 🔄 NOVO FLUXO: DEMANDA REVERSA
+// ==========================================
+
+model Demanda {
+  id           String   @id @default(uuid())
+  produto      String   // Ex: "Maçã", "Laranja"
+  quantidade   Int      // Ex: 10
+  unidade      String   @default("Caixas") // Kg, Caixas, Maços
+  emailMercado String   // O email do mercado que abriu o pedido
+  status       String   @default("ABERTA") // ABERTA, CONCLUIDA, CANCELADA
+  criadoEm     DateTime @default(now())
+
+  // Relação: Uma demanda (pedido) pode ter várias ofertas (respostas de produtores)
+  ofertas      Oferta[]
+}
+
+model Oferta {
+  id             String   @id @default(uuid())
+  quantidade     Int      // O quanto o produtor tem (Ex: 5 caixas)
+  emailProdutor  String   // O email do produtor que respondeu
+  status         String   @default("ACEITA") // Vamos deixar "ACEITA" como padrão para simplificar a união
+  criadoEm       DateTime @default(now())
+
+  // Relação: Essa oferta pertence a qual demanda?
+  demandaId      String
+  demanda        Demanda  @relation(fields: [demandaId], references: [id])
+}

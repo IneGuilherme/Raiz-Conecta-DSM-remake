@@ -49,6 +49,8 @@ export default function LoginPage() {
                     const nomeProvisorio = values.email.split('@')[0];
                     localStorage.setItem("userName", nomeProvisorio);
 
+                    localStorage.setItem("userRole", dados.tipoUser);
+
                     // Redirecionamento baseado no Perfil
                     if (dados.tipoUser === "produtor") {
                         router.push("/produtor");
@@ -86,6 +88,8 @@ export default function LoginPage() {
 
                     // Salva os dados no navegador logo no cadastro
                     localStorage.setItem("userEmail", values.email);
+                    
+                    localStorage.setItem("userRole", dados.tipoUser);
 
                     // Se ele preencheu o nome no formulário, a gente usa o nome real!
                     // Se não, fazemos a quebra pelo email de novo.
