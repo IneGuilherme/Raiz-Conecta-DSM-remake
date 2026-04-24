@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     try {
         const { email, senha } = await req.json();
 
-        // 1. Procura o usuário no banco pelo e-mail (login)
+        // 1. Procura o usuário no banco pelo e-mail (tabela de Acessos)
         const usuario = await prisma.acesso.findFirst({
             where: { login: email }
         });
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Senha incorreta." }, { status: 401 });
         }
 
-        // 3. Se deu tudo certo, responde qual é o tipo de usuário (produtor ou mercado)
+        // 3. Responde com sucesso e o tipo de usuário
         return NextResponse.json({
             message: "Login realizado com sucesso!",
             tipoUser: usuario.tipoUser

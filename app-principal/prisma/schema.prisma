@@ -3,19 +3,19 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql" // Mudamos oficialmente para PostgreSQL
   url      = env("DATABASE_URL")
 }
 
 // ==========================================
-// TABELAS DO RAIZ CONECTA (Versão SQLite Universal)
+// TABELAS DO RAIZ CONECTA (Baseadas no seu SQL original)
 // ==========================================
 
 model Cliente {
-  cdCliente    Int       @id
+  cdCliente    Int       @id @default(autoincrement())
   nomeFantasia String?
   razaoSocial  String?
-  documento    String?
+  documento    String?   // CPF ou CNPJ
   tipoDoc      String?
   ie           String?
   rua          String?
@@ -25,21 +25,25 @@ model Cliente {
   estado       String?
   complemento  String?
   cep          String?
-  email        String?
+  email        String    @unique // Obrigatório e Único para o Login
+  senha        String?   // Adicionado para suportar o login no sistema
   telefone     String?
-  status       String?
+  status       String    @default("EM_ANALISE") // Simplificado: EM_ANALISE, APROVADO, REJEITADO
   
   Acessos      Acesso[]
   Pedidos      Pedido[]
+
+  urlDocumento String?
+  criadoEm     DateTime? @default(now())
 
   @@map("cliente")
 }
 
 model Vendedor {
-  cdVendedor   Int       @id
+  cdVendedor   Int       @id @default(autoincrement())
   nomeFantasia String?
   razaoSocial  String?
-  documento    String?
+  documento    String?   // CPF ou CNPJ
   tipoDoc      String?
   ie           String?
   rua          String?
@@ -49,21 +53,24 @@ model Vendedor {
   estado       String?
   complemento  String?
   cep          String?
-  email        String?
+  email        String    @unique // Obrigatório e Único para o Login
+  senha        String?   // Adicionado para suportar o login no sistema
   telefone     String?
-  status       String?
-  urlDocumento String?
+  status       String    @default("EM_ANALISE") // Simplificado: EM_ANALISE, APROVADO, REJEITADO
+  urlDocumento String?   // Para a foto do RG/Comprovante
 
   Acessos      Acesso[]
   ItensPedido  ItemPedido[]
   Estoques     Prod_Vendedor_Possui[]
 
+  criadoEm DateTime? @default(now())
+
   @@map("vendedor")
 }
 
 model Entregador {
-  cdEntregador  Int       @id
-  dataRegistro  DateTime?
+  cdEntregador  Int       @id @default(autoincrement())
+  dataRegistro  DateTime? @default(now())
   dataAprovacao DateTime?
   nome          String?
   documento     String?
@@ -75,7 +82,7 @@ model Entregador {
   estado        String?
   complemento   String?
   cep           String?
-  status        String?
+  status        String    @default("EM_ANALISE")
   
   Acessos       Acesso[]
   Rotas         Rota[]
@@ -84,7 +91,7 @@ model Entregador {
 }
 
 model Acesso {
-  id             Int         @id
+  id             Int       @id @default(autoincrement())
   cdUser         Int?
   login          String?
   hash           String?
@@ -104,8 +111,8 @@ model Acesso {
 }
 
 model Produto {
-  cdProduto   Int       @id
-  dtCadastro  DateTime?
+  cdProduto   Int       @id @default(autoincrement())
+  dtCadastro  DateTime? @default(now())
   nome        String?
   tipo        String?
   preco       Float?
@@ -120,8 +127,8 @@ model Produto {
 }
 
 model Pedido {
-  cdPedido    Int       @id
-  dtInicio    DateTime?
+  cdPedido    Int       @id @default(autoincrement())
+  dtInicio    DateTime? @default(now())
   dtEntrega   DateTime?
   dtFim       DateTime?
   qtdItens    Int?
@@ -139,7 +146,7 @@ model Pedido {
 }
 
 model ItemPedido {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   qtd        Int?
   preco      Float?
   un         String?
@@ -156,8 +163,8 @@ model ItemPedido {
 }
 
 model Prod_Vendedor_Possui {
-  idRegistro Int       @id
-  dtAdesao   DateTime?
+  idRegistro Int       @id @default(autoincrement())
+  dtAdesao   DateTime? @default(now())
   saldo      Int?
   dtAtzSaldo DateTime?
   preco      Float?
@@ -171,8 +178,8 @@ model Prod_Vendedor_Possui {
 }
 
 model Rota {
-  cdRota       Int       @id
-  dRegistro    DateTime?
+  cdRota       Int       @id @default(autoincrement())
+  dRegistro    DateTime? @default(now())
   dtFim        DateTime?
   percursoKM   Float?
   valor        Float?
@@ -186,9 +193,9 @@ model Rota {
 }
 
 model ColetaEntrega {
-  cdColEntrega Int       @id
+  cdColEntrega Int       @id @default(autoincrement())
   tipo         String?
-  dtRegistro   DateTime?
+  dtRegistro   DateTime? @default(now())
   dtPrevista   DateTime?
   status       String?
   valor        Float?
@@ -201,30 +208,29 @@ model ColetaEntrega {
 }
 
 // ==========================================
-// 🔄 NOVO FLUXO: DEMANDA REVERSA
+// 🔄 FLUXO ATIVO: DEMANDA REVERSA
 // ==========================================
 
 model Demanda {
   id           String   @id @default(uuid())
-  produto      String   // Ex: "Maçã", "Laranja"
-  quantidade   Int      // Ex: 10
-  unidade      String   @default("Caixas") // Kg, Caixas, Maços
-  emailMercado String   // O email do mercado que abriu o pedido
-  status       String   @default("ABERTA") // ABERTA, CONCLUIDA, CANCELADA
+  produto      String   
+  quantidade   Int      
+  unidade      String   @default("Caixas") 
+  precoMedio   Float?   // Adicionado para a tela de Checkout estimar o valor
+  emailMercado String   
+  status       String   @default("ABERTA") 
   criadoEm     DateTime @default(now())
 
-  // Relação: Uma demanda (pedido) pode ter várias ofertas (respostas de produtores)
   ofertas      Oferta[]
 }
 
 model Oferta {
   id             String   @id @default(uuid())
-  quantidade     Int      // O quanto o produtor tem (Ex: 5 caixas)
-  emailProdutor  String   // O email do produtor que respondeu
-  status         String   @default("ACEITA") // Vamos deixar "ACEITA" como padrão para simplificar a união
+  quantidade     Int      
+  emailProdutor  String   
+  status         String   @default("ACEITA") 
   criadoEm       DateTime @default(now())
 
-  // Relação: Essa oferta pertence a qual demanda?
   demandaId      String
   demanda        Demanda  @relation(fields: [demandaId], references: [id])
 }

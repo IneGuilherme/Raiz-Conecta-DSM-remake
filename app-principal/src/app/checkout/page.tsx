@@ -1,318 +1,184 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Store,
-  PlusCircle,
-  ShoppingBasket,
-  Clock,
-  CheckCircle,
-  Trash2,
-  Send,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Clock, ShieldCheck, MapPin, Search, Plus, Minus, ShoppingCart, Leaf } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-// Interfaces para o TypeScript
-interface ProdutoCatalogo {
-  id: number;
-  nome: string;
-  icone: string;
-  unidadePadrao: string;
-  categoria: string;
-}
+// Produtos Mockados para a Vitrine (Até criarmos o banco de produtos da plataforma)
+const CATALOGO = [
+  { id: 1, nome: "Maçã Fuji (Caixa 18kg)", precoEstimado: 85.00, img: "🍎" },
+  { id: 2, nome: "Laranja Pera (Saco 20kg)", precoEstimado: 45.00, img: "🍊" },
+  { id: 3, nome: "Alface Crespa (Caixa 12 Maços)", precoEstimado: 24.00, img: "🥬" },
+  { id: 4, nome: "Tomate Carmem (Caixa 20kg)", precoEstimado: 60.00, img: "🍅" },
+];
 
-interface ItemCarrinho {
-  idTemp: string;
-  produto: string;
-  quantidade: number;
-  unidade: string;
-}
-
-interface Oferta {
-  quantidade: number;
-}
-
-interface Demanda {
-  id: string;
-  produto: string;
-  quantidade: number;
-  unidade: string;
-  status: string;
-  ofertas: Oferta[];
-}
-
-export default function MercadoCheckoutPage() {
-  const [emailMercado, setEmailMercado] = useState<string | null>(null);
-  const [catalogoApi, setCatalogoApi] = useState<ProdutoCatalogo[]>([]);
-  const [demandasAtivas, setDemandasAtivas] = useState<Demanda[]>([]);
-
-  const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
-  const [produtoSelecionado, setProdutoSelecionado] =
-    useState<ProdutoCatalogo | null>(null);
-  const [quantidade, setQuantidade] = useState("");
-  const [carregando, setCarregando] = useState(false);
+export default function CheckoutMercado() {
+  const router = useRouter();
+  const [mercado, setMercado] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [carrinho, setCarrinho] = useState<any[]>([]);
 
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-    if (email) {
-      setEmailMercado(email);
-      buscarMinhasDemandas(email);
+    async function carregar() {
+      const email = localStorage.getItem("userEmail");
+      if (!email) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const res = await fetch(`/api/mercado/perfil?email=${email}`);
+        if (res.ok) {
+          const dados = await res.json();
+          setMercado(dados);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
-    buscarProdutosNaAPI();
-  }, []);
+    carregar();
+  }, [router]);
 
-  const buscarProdutosNaAPI = async () => {
-    try {
-      const res = await fetch(`/api/produtos`);
-      const dados = await res.json();
-      setCatalogoApi(dados);
-    } catch (err) {
-      console.error("Erro ao carregar catálogo da API", err);
-    }
-  };
-
-  const buscarMinhasDemandas = async (email: string) => {
-    try {
-      const res = await fetch(`/api/mercado/demandas?email=${email}`);
-      const dados = await res.json();
-      setDemandasAtivas(dados);
-    } catch (err) {
-      console.error("Erro ao buscar demandas", err);
-    }
-  };
-
-  const adicionarAoCarrinho = () => {
-    if (!quantidade || Number(quantidade) <= 0 || !produtoSelecionado) {
-      alert("Insira uma quantidade válida.");
-      return;
-    }
-
-    const novoItem: ItemCarrinho = {
-      idTemp: Math.random().toString(),
-      produto: `${produtoSelecionado.icone} ${produtoSelecionado.nome}`,
-      quantidade: Number(quantidade),
-      unidade: produtoSelecionado.unidadePadrao,
-    };
-
-    setCarrinho([...carrinho, novoItem]);
-    setProdutoSelecionado(null);
-    setQuantidade("");
-  };
-
-  const removerDoCarrinho = (idTemp: string) => {
-    setCarrinho(carrinho.filter((item) => item.idTemp !== idTemp));
-  };
-
-  const dispararPedidoEmMassa = async () => {
-    if (carrinho.length === 0) return;
-
-    setCarregando(true);
-    try {
-      await fetch("/api/mercado/demandas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          emailMercado: emailMercado,
-          itens: carrinho,
-        }),
-      });
-
-      alert("Lista de pedidos disparada com sucesso para os produtores!");
-      setCarrinho([]);
-      buscarMinhasDemandas(emailMercado!);
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao disparar a lista.");
-    } finally {
-      setCarregando(false);
+  const adicionarAoCarrinho = (produto: any) => {
+    const existe = carrinho.find((item) => item.id === produto.id);
+    if (existe) {
+      setCarrinho(carrinho.map((item) => item.id === produto.id ? { ...item, qtd: item.qtd + 1 } : item));
+    } else {
+      setCarrinho([...carrinho, { ...produto, qtd: 1 }]);
     }
   };
 
-  if (!emailMercado)
-    return <p className="p-10 text-center">Carregando portal do mercado...</p>;
+  const removerDoCarrinho = (id: number) => {
+    const existe = carrinho.find((item) => item.id === id);
+    if (existe.qtd === 1) {
+      setCarrinho(carrinho.filter((item) => item.id !== id));
+    } else {
+      setCarrinho(carrinho.map((item) => item.id === id ? { ...item, qtd: item.qtd - 1 } : item));
+    }
+  };
 
+  const totalEstimado = carrinho.reduce((acc, item) => acc + (item.precoEstimado * item.qtd), 0);
+
+  const dispararPedido = async () => {
+    if (carrinho.length === 0) return alert("Seu carrinho está vazio!");
+    // Aqui conectaremos com a API de Demanda que fizemos no banco!
+    alert("Demanda disparada com sucesso para os produtores da região!");
+    setCarrinho([]);
+  };
+
+  if (loading) return <div className="p-20 text-center text-green-700 font-bold">Carregando portal do comprador...</div>;
+  if (!mercado) return <div className="p-20 text-center">Acesso Negado.</div>;
+
+  // TRAVA DE SEGURANÇA!
+  if (mercado.status === "EM_ANALISE") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <Card className="p-12 text-center shadow-lg max-w-lg border-t-4 border-amber-500">
+          <Clock size={64} className="mx-auto text-amber-500 mb-6 animate-pulse" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Cadastro em Análise</h2>
+          <p className="text-gray-600">Recebemos sua documentação! Nossos administradores estão verificando seus dados para garantir a segurança da plataforma. Volte em breve.</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // TELA DE VITRINE E CHECKOUT (Aprovado)
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-10">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8 flex items-center gap-4">
-          <div className="bg-blue-600 p-3 rounded-xl text-white shadow-md">
-            <Store size={32} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Catálogo de Abastecimento
+    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+
+        {/* LADO ESQUERDO: Catálogo e Dados (Estilo Codante) */}
+        <div className="w-full lg:w-2/3 space-y-6">
+
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-2">
+              <Leaf className="text-green-600" /> Raiz Conecta
             </h1>
-            <p className="text-gray-600">
-              Monte sua lista de necessidades e nós notificamos os produtores
-              locais.
-            </p>
           </div>
-        </header>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <ShoppingBasket className="text-green-600" /> Produtos Disponíveis
-            </h2>
+          {/* DADOS DE ENTREGA */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><MapPin size={20} className="text-green-600" /> Local de Entrega</h2>
+            <div className="bg-gray-50 p-4 rounded-xl text-sm text-gray-700 border border-gray-100">
+              <p className="font-bold text-base mb-1">{mercado.nomeFantasia || mercado.razaoSocial}</p>
+              <p>{mercado.rua}, {mercado.numero} - {mercado.bairro}</p>
+              <p>{mercado.cidade} / {mercado.estado} - CEP: {mercado.cep}</p>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {catalogoApi.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setProdutoSelecionado(item);
-                    setQuantidade("");
-                  }}
-                  className={`p-4 rounded-xl border-2 text-center transition-all ${
-                    produtoSelecionado?.id === item.id
-                      ? "border-green-500 bg-green-50 shadow-md transform scale-105"
-                      : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/50"
-                  }`}
-                >
-                  <div className="text-3xl mb-2">{item.icone}</div>
-                  <h3 className="font-bold text-sm text-gray-800">
-                    {item.nome}
-                  </h3>
-                  <p className="text-[10px] text-gray-500 mt-1 font-bold uppercase">
-                    {item.categoria}
-                  </p>
-                </button>
-              ))}
+          {/* CATÁLOGO RÁPIDO */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2"><Search size={20} className="text-blue-600" /> Catálogo de Produtos</h2>
             </div>
 
-            {produtoSelecionado && (
-              <Card className="mt-8 p-6 bg-green-50 border-green-200 shadow-md animate-in fade-in slide-in-from-bottom-4">
-                <div className="flex flex-col sm:flex-row gap-4 items-end">
-                  <div className="flex-1 w-full">
-                    <label className="text-sm font-bold text-green-900 block mb-2">
-                      Adicionar {produtoSelecionado.icone}{" "}
-                      {produtoSelecionado.nome} (em{" "}
-                      {produtoSelecionado.unidadePadrao})
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder={`Quantas ${produtoSelecionado.unidadePadrao}?`}
-                      value={quantidade}
-                      onChange={(e) => setQuantidade(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
-                    />
-                  </div>
-                  <Button
-                    onClick={adicionarAoCarrinho}
-                    className="w-full sm:w-auto bg-green-700 hover:bg-green-800 py-3 h-12"
-                  >
-                    <PlusCircle size={18} className="mr-2" /> Pôr na Lista
-                  </Button>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {CATALOGO.map(prod => (
+                <div key={prod.id} className="border border-gray-200 rounded-xl p-4 text-center hover:border-green-400 hover:shadow-md transition-all cursor-pointer" onClick={() => adicionarAoCarrinho(prod)}>
+                  <div className="text-4xl mb-3">{prod.img}</div>
+                  <h3 className="font-semibold text-sm text-gray-800 h-10">{prod.nome}</h3>
+                  <p className="text-xs text-gray-500 mt-2">Est. R$ {prod.precoEstimado.toFixed(2)}</p>
+                  <Button variant="outline" className="w-full mt-3 h-8 text-xs border-green-200 text-green-700 hover:bg-green-50">Adicionar</Button>
                 </div>
-              </Card>
-            )}
-          </div>
-
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="p-6 border-blue-200 bg-white shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                Sua Lista de Pedidos
-              </h2>
-
-              {carrinho.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">
-                  Sua lista está vazia. Selecione produtos ao lado.
-                </p>
-              ) : (
-                <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
-                  {carrinho.map((item) => (
-                    <div
-                      key={item.idTemp}
-                      className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100"
-                    >
-                      <div>
-                        <p className="font-bold text-gray-800 text-sm">
-                          {item.produto}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {item.quantidade} {item.unidade}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => removerDoCarrinho(item.idTemp)}
-                        className="text-red-400 hover:text-red-600 p-2"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <Button
-                onClick={dispararPedidoEmMassa}
-                disabled={carrinho.length === 0 || carregando}
-                className="w-full bg-blue-600 hover:bg-blue-700 py-6 font-bold shadow-md h-12"
-              >
-                {carregando ? (
-                  "Disparando..."
-                ) : (
-                  <>
-                    <Send size={18} className="mr-2" /> Disparar{" "}
-                    {carrinho.length} Pedidos
-                  </>
-                )}
-              </Button>
-            </Card>
-
-            <Card className="p-6 bg-gray-50/50 border-gray-200">
-              <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Clock size={16} /> Status das Demandas
-              </h2>
-              <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                {demandasAtivas.map((demanda) => {
-                  const atendida = demanda.ofertas.reduce(
-                    (acc: number, ofr: Oferta) => acc + ofr.quantidade,
-                    0,
-                  );
-                  const porcentagem = Math.min(
-                    (atendida / demanda.quantidade) * 100,
-                    100,
-                  );
-
-                  return (
-                    <div
-                      key={demanda.id}
-                      className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
-                    >
-                      <div className="flex justify-between mb-1">
-                        <h4 className="font-bold text-gray-800 text-sm">
-                          {demanda.produto}
-                        </h4>
-                        <span className="text-xs font-bold text-gray-500">
-                          {demanda.quantidade} {demanda.unidade}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2 mb-1">
-                        <div
-                          className={`h-2 rounded-full ${porcentagem === 100 ? "bg-green-500" : "bg-blue-500"}`}
-                          style={{ width: `${porcentagem}%` }}
-                        ></div>
-                      </div>
-                      <div className="flex justify-between text-[10px] font-bold uppercase text-gray-400">
-                        <span>{atendida} Oferecidos</span>
-                        {porcentagem === 100 && (
-                          <span className="text-green-600">
-                            <CheckCircle size={10} className="inline mr-1" />{" "}
-                            Completo
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* LADO DIREITO: Resumo do Pedido (Checkout) */}
+        <div className="w-full lg:w-1/3">
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky top-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <ShoppingCart className="text-green-600" /> Sua Demanda
+            </h2>
+
+            {carrinho.length === 0 ? (
+              <div className="text-center py-10 text-gray-400">
+                <ShoppingCart size={48} className="mx-auto mb-3 opacity-20" />
+                <p>Adicione produtos para iniciar uma cotação.</p>
+              </div>
+            ) : (
+              <div className="space-y-4 mb-8 max-h-[400px] overflow-y-auto pr-2">
+                {carrinho.map(item => (
+                  <div key={item.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{item.img}</span>
+                      <div>
+                        <p className="font-bold text-sm text-gray-800 truncate w-32">{item.nome}</p>
+                        <p className="text-xs text-gray-500">R$ {item.precoEstimado.toFixed(2)} / un</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+                      <button onClick={() => removerDoCarrinho(item.id)} className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded"><Minus size={14} /></button>
+                      <span className="text-sm font-bold w-4 text-center">{item.qtd}</span>
+                      <button onClick={() => adicionarAoCarrinho(item)} className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded"><Plus size={14} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="border-t border-gray-200 pt-4 mb-6">
+              <div className="flex justify-between items-center text-gray-600 mb-2">
+                <span>Taxa da Plataforma</span>
+                <span>Grátis</span>
+              </div>
+              <div className="flex justify-between items-center text-xl font-extrabold text-gray-900 mt-4">
+                <span>Total Estimado</span>
+                <span>R$ {totalEstimado.toFixed(2)}</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-2 text-center">O preço final será definido pelos produtores nas ofertas.</p>
+            </div>
+
+            <Button onClick={dispararPedido} disabled={carrinho.length === 0} className="w-full h-14 text-lg bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200 flex items-center justify-center gap-2">
+              <ShieldCheck size={20} /> Disparar para Produtores
+            </Button>
+          </div>
+        </div>
+
       </div>
     </div>
   );

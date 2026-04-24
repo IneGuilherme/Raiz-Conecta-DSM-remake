@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Leaf } from "lucide-react";
 import { useFormik } from "formik";
+// IMPORTANTE: Você precisará ir no arquivo authSchema.ts e remover a obrigatoriedade do CPF e Telefone do cadastroSchema!
 import { loginSchema, cadastroSchema } from "@/schemas/authSchema";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -18,12 +19,12 @@ export default function LoginPage() {
     const formik = useFormik({
         initialValues: {
             tipoUsuario: "produtor",
-            nome: "",
-            documento: "",
-            telefone: "",
+            nome: "", // Só usado no cadastro
             email: "",
             senha: "",
         },
+        // Se o seu cadastroSchema ainda estiver exigindo CPF, ele vai travar. 
+        // Lembre-se de tirar o documento e telefone de lá depois.
         validationSchema: isLogin ? loginSchema : cadastroSchema,
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
             if (isLogin) {
@@ -44,14 +45,12 @@ export default function LoginPage() {
                         return;
                     }
 
-                    // Salva os dados no navegador para o Header usar
                     localStorage.setItem("userEmail", values.email);
                     const nomeProvisorio = values.email.split('@')[0];
                     localStorage.setItem("userName", nomeProvisorio);
-
                     localStorage.setItem("userRole", dados.tipoUser);
 
-                    // Redirecionamento baseado no Perfil
+                    // Redirecionamento
                     if (dados.tipoUser === "produtor") {
                         router.push("/produtor");
                     } else if (dados.tipoUser === "mercado") {
@@ -70,7 +69,7 @@ export default function LoginPage() {
                 }
             } else {
                 // ==========================
-                // LÓGICA DE CADASTRO
+                // LÓGICA DE CADASTRO (Passo 1)
                 // ==========================
                 try {
                     const resposta = await fetch('/api/auth/cadastro', {
@@ -86,19 +85,14 @@ export default function LoginPage() {
                         return;
                     }
 
-                    // Salva os dados no navegador logo no cadastro
                     localStorage.setItem("userEmail", values.email);
-                    
-                    localStorage.setItem("userRole", dados.tipoUser);
-
-                    // Se ele preencheu o nome no formulário, a gente usa o nome real!
-                    // Se não, fazemos a quebra pelo email de novo.
+                    localStorage.setItem("userRole", values.tipoUsuario);
                     const nomeParaSalvar = values.nome ? values.nome.split(' ')[0] : values.email.split('@')[0];
                     localStorage.setItem("userName", nomeParaSalvar);
 
-                    alert("Cadastro realizado com sucesso! Você já pode fazer login.");
-                    setIsLogin(true);
-                    formik.resetForm();
+                    // Após cadastrar, arremessa ele direto para a nova tela do Passo 2!
+                    alert("Conta criada! Vamos finalizar seu perfil.");
+                    router.push("/completar-perfil");
 
                 } catch (erro) {
                     console.error("Erro no fetch:", erro);
@@ -130,16 +124,14 @@ export default function LoginPage() {
                         <button
                             onClick={() => alternarAba(true)}
                             type="button"
-                            className={`flex-1 py-3 text-center font-medium transition-colors ${isLogin ? "border-b-2 border-green-600 text-green-700" : "text-gray-500 hover:text-gray-700"
-                                }`}
+                            className={`flex-1 py-3 text-center font-medium transition-colors ${isLogin ? "border-b-2 border-green-600 text-green-700" : "text-gray-500 hover:text-gray-700"}`}
                         >
                             Entrar
                         </button>
                         <button
                             onClick={() => alternarAba(false)}
                             type="button"
-                            className={`flex-1 py-3 text-center font-medium transition-colors ${!isLogin ? "border-b-2 border-green-600 text-green-700" : "text-gray-500 hover:text-gray-700"
-                                }`}
+                            className={`flex-1 py-3 text-center font-medium transition-colors ${!isLogin ? "border-b-2 border-green-600 text-green-700" : "text-gray-500 hover:text-gray-700"}`}
                         >
                             Criar Conta
                         </button>
@@ -150,7 +142,6 @@ export default function LoginPage() {
                     </h2>
 
                     <form className="space-y-4" onSubmit={formik.handleSubmit}>
-
                         {!isLogin && (
                             <>
                                 <div className="flex flex-col gap-1 w-full mb-2">
@@ -177,29 +168,7 @@ export default function LoginPage() {
                                     value={formik.values.nome}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
-                                    error={formik.touched.nome ? formik.errors.nome : undefined}
-                                />
-
-                                <Input
-                                    label={tipoUsuario === "produtor" ? "CPF" : "CNPJ"}
-                                    name="documento"
-                                    type="text"
-                                    placeholder={tipoUsuario === "produtor" ? "000.000.000-00" : "00.000.000/0001-00"}
-                                    value={formik.values.documento}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={formik.touched.documento ? formik.errors.documento : undefined}
-                                />
-
-                                <Input
-                                    label="Telefone"
-                                    name="telefone"
-                                    type="tel"
-                                    placeholder="(00) 00000-0000"
-                                    value={formik.values.telefone}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={formik.touched.telefone ? formik.errors.telefone : undefined}
+                                    error={formik.touched.nome ? formik.errors.nome as string : undefined}
                                 />
                             </>
                         )}
@@ -212,7 +181,7 @@ export default function LoginPage() {
                             value={formik.values.email}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            error={formik.touched.email ? formik.errors.email : undefined}
+                            error={formik.touched.email ? formik.errors.email as string : undefined}
                         />
 
                         <Input
@@ -223,11 +192,11 @@ export default function LoginPage() {
                             value={formik.values.senha}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            error={formik.touched.senha ? formik.errors.senha : undefined}
+                            error={formik.touched.senha ? formik.errors.senha as string : undefined}
                         />
 
-                        <Button fullWidth className="mt-6" type="submit" disabled={formik.isSubmitting}>
-                            {formik.isSubmitting ? "Aguarde..." : (isLogin ? "Entrar na Plataforma" : "Finalizar Cadastro")}
+                        <Button className="mt-6 w-full" type="submit" disabled={formik.isSubmitting}>
+                            {formik.isSubmitting ? "Aguarde..." : (isLogin ? "Entrar na Plataforma" : "Avançar para o Passo 2")}
                         </Button>
                     </form>
                 </Card>

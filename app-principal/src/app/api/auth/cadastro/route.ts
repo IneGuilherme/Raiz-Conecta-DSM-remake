@@ -4,9 +4,12 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
     try {
-        // 1. Pega os dados que o Front-end enviou
-        const body = await req.json();
-        const { tipoUsuario, nome, documento, telefone, email, senha } = body;
+        // 1. Pega os dados do Front-end (Agora simplificado para o Passo 1)
+        const { tipoUsuario, nome, email, senha } = await req.json();
+
+        if (!nome || !email || !senha || !tipoUsuario) {
+            return NextResponse.json({ error: "Preencha todos os campos obrigatórios." }, { status: 400 });
+        }
 
         // 2. Verifica se o e-mail já existe na tabela de Acesso
         const usuarioExistente = await prisma.acesso.findFirst({
@@ -20,74 +23,53 @@ export async function POST(req: Request) {
         // 3. Criptografa a senha
         const hashSenha = await bcrypt.hash(senha, 10);
 
-        // 4. Gera IDs únicos (Como não estamos usando AUTO_INCREMENT no SQLite, geramos manualmente)
-        const novoId = Math.floor(Math.random() * 1000000);
-        const acessoId = Math.floor(Math.random() * 1000000);
-
-        // 5. Salva no Banco de Dados
+        // 4. Salva no Banco de Dados (O PostgreSQL gera os IDs automaticamente agora!)
         if (tipoUsuario === "produtor") {
             await prisma.vendedor.create({
                 data: {
-                    cdVendedor: novoId,
                     nomeFantasia: nome,
-                    documento: documento,
-                    telefone: telefone,
                     email: email,
-                    status: "P", // "P" de Pendente (O Admin aprova depois)
+                    status: "EM_ANALISE", // Novo status simplificado
                     Acessos: {
                         create: {
-                            id: acessoId,
                             login: email,
                             hash: hashSenha,
                             tipoUser: "produtor",
-                            status: "P"
+                            status: "EM_ANALISE"
                         }
                     }
                 }
             });
         } else {
+            // Mercado também entra como EM_ANALISE para o Admin aprovar
             await prisma.cliente.create({
                 data: {
-                    cdCliente: novoId,
                     nomeFantasia: nome,
-                    documento: documento,
-                    telefone: telefone,
                     email: email,
-                    status: "A", // O Mercado já nasce "A"tivo
+                    status: "EM_ANALISE",
                     Acessos: {
                         create: {
-                            id: acessoId,
                             login: email,
                             hash: hashSenha,
                             tipoUser: "mercado",
-                            status: "A"
+                            status: "EM_ANALISE"
                         }
                     }
                 }
             });
         }
 
-        // ------------------------------------------------------------------
-        // 6. DISPARO DO E-MAIL VIA MICROSSERVIÇO (A Ponte)
-        // ------------------------------------------------------------------
+        // 5. DISPARO DO E-MAIL VIA MICROSSERVIÇO
         try {
-            // O App Principal (porta 3000) faz uma requisição HTTP para o Microsserviço (porta 3001)
             await fetch("http://localhost:3001/api/email/boas-vindas", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: email,
-                    nome: nome,
-                    tipoUsuario: tipoUsuario
-                })
+                body: JSON.stringify({ email, nome, tipoUsuario })
             });
             console.log("Aviso de disparo de e-mail enviado ao Microsserviço!");
         } catch (err) {
-            // Usamos try/catch para que, se o servidor de e-mail estiver desligado, 
-            // o cadastro do usuário NÃO seja cancelado. Ele salva no banco do mesmo jeito!
             console.error("Falha ao comunicar com o microsserviço de e-mail:", err);
         }
-        // ------------------------------------------------------------------
 
         return NextResponse.json({ message: "Cadastro realizado com sucesso!" }, { status: 201 });
 
