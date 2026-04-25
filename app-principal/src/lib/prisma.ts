@@ -1,13 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
-// Essa verificação impede que o Next.js abra milhares de conexões 
-// com o banco de dados toda vez que você salva um arquivo
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+// Previne múltiplas instâncias do Prisma Client no ambiente de desenvolvimento (Hot Reload do Next.js)
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: ['query', 'info', 'warn', 'error'], // Mostra as ações no terminal para a gente debugar
-  });
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

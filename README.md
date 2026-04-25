@@ -14,8 +14,10 @@ Sistema de intermediação entre produtores rurais e mercados locais. O projeto 
 ### 1. Clonar e Instalar as Dependências
 Abra o terminal na pasta `raiz-conecta` e instale as dependências dos dois projetos:
 ```bash
+
 cd app-principal
 npm install
 npx prisma generate
+
 cd ../microservico
 npm install

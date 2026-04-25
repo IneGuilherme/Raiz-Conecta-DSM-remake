@@ -1,65 +1,62 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// POST: Mercado disparando um novo pedido
 export async function POST(req: Request) {
   try {
-    // Agora esperamos um email e uma LISTA de itens
-    const { emailMercado, itens } = await req.json();
+    const body = await req.json();
+    const { emailMercado, carrinho } = body;
 
-    if (!emailMercado || !itens || itens.length === 0) {
+    if (!emailMercado || !carrinho || carrinho.length === 0) {
       return NextResponse.json(
-        { error: "Carrinho vazio ou dados inválidos" },
+        { error: "Dados inválidos ou carrinho vazio" },
         { status: 400 },
       );
     }
 
-    // Prepara os dados para o Prisma (colocando o email do mercado e o status em todos)
-    interface ItemRecebido {
-      produto: string;
-      quantidade: number | string;
-      unidade: string;
-    }
-
-    const dadosParaSalvar = itens.map((item: ItemRecebido) => ({
-      produto: item.produto,
-      quantidade: Number(item.quantidade),
-      unidade: item.unidade,
-      emailMercado: emailMercado,
-      status: "ABERTA",
-    }));
-
-    // O comando "createMany" salva dezenas de pedidos no banco em 1 milissegundo!
-    await prisma.demanda.createMany({
-      data: dadosParaSalvar,
+    // Para cada item no carrinho, cria uma "Demanda" no banco de dados
+    const criacoes = carrinho.map((item: any) => {
+      return prisma.demanda.create({
+        data: {
+          produto: item.nome,
+          quantidade: item.qtd,
+          unidade: item.unidade || "Kg", // Oficializado para Kg
+          precoMedio: item.precoEstimado,
+          emailMercado: emailMercado,
+          status: "ABERTA",
+        },
+      });
     });
+
+    // Executa todas as criações ao mesmo tempo para não travar o banco
+    await Promise.all(criacoes);
+
+    // TODO: Integração com microsserviço de e-mail para avisar produtores
 
     return NextResponse.json(
       { message: "Demandas disparadas com sucesso!" },
       { status: 201 },
     );
   } catch (error) {
-    console.error("Erro ao salvar demanda:", error);
+    console.error("Erro ao disparar demanda:", error);
     return NextResponse.json(
-      { error: "Erro ao criar demanda" },
+      { error: "Erro interno ao salvar pedido" },
       { status: 500 },
     );
   }
 }
 
-// ... (MANTENHA A ROTA GET QUE JÁ EXISTE AQUI) ...
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const email = searchParams.get("email");
-
+// GET: Puxa as demandas abertas (Os produtores vão usar isso no painel deles)
+export async function GET() {
   try {
     const demandas = await prisma.demanda.findMany({
-      where: email ? { emailMercado: email } : {},
-      include: { ofertas: true },
+      include: { ofertas: true }, // Traz junto quem já fez oferta
       orderBy: { criadoEm: "desc" },
     });
     return NextResponse.json(demandas);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error("Erro ao buscar demanda:", error); // Adicionado console.error
     return NextResponse.json(
       { error: "Erro ao buscar demandas" },
       { status: 500 },

@@ -230,7 +230,8 @@ model Oferta {
   emailProdutor  String   
   status         String   @default("ACEITA") 
   criadoEm       DateTime @default(now())
-
   demandaId      String
   demanda        Demanda  @relation(fields: [demandaId], references: [id])
+  statusEntrega String   @default("PENDENTE")
+  nota          Int?
 }

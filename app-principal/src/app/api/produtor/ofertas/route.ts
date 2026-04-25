@@ -17,16 +17,19 @@ export async function POST(req: Request) {
       include: { ofertas: true },
     });
 
-    if (!demanda)
+    if (!demanda) {
       return NextResponse.json(
         { error: "Demanda não encontrada" },
         { status: 404 },
       );
-    if (demanda.status === "CONCLUIDA")
+    }
+
+    if (demanda.status === "CONCLUIDA") {
       return NextResponse.json(
         { error: "Este pedido já foi totalmente atendido." },
         { status: 400 },
       );
+    }
 
     // 2. Calcula quanto já foi garantido por outros produtores
     const qtdJaAtendida = demanda.ofertas.reduce(

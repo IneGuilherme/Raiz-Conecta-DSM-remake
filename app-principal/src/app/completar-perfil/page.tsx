@@ -57,6 +57,7 @@ export default function CompletarPerfilPage() {
     };
 
     const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        // eslint-disable-next-line prefer-const
         let cep = e.target.value.replace(/\D/g, "");
 
         // Aplica a máscara 00000-000
@@ -124,7 +125,7 @@ export default function CompletarPerfilPage() {
             if (res.ok) {
                 alert("Perfil completo! Aguardando liberação do sistema.");
                 if (usuarioLocal.role === "produtor") router.push("/produtor");
-                else router.push("/checkout");
+                else router.push("/catalogo");
             } else {
                 alert("Erro ao salvar os dados.");
             }
@@ -203,7 +204,7 @@ export default function CompletarPerfilPage() {
                             <h3 className="font-bold text-gray-700 flex items-center gap-2 mb-4"><UploadCloud size={18} /> Foto do Documento</h3>
 
                             <div className="mb-4">
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">O que você vai nos enviar?</label>
+                                <label className="text-sm font-semibold text-gray-700 block mb-1">Selecione um Documento a ser anexado:</label>
                                 <select name="tipoComprovante" value={formDados.tipoComprovante} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none bg-white">
                                     <option value="RG">Carteira de Identidade (RG)</option>
                                     <option value="CNH">Carteira de Motorista (CNH)</option>
@@ -223,8 +224,8 @@ export default function CompletarPerfilPage() {
                                     ) : (
                                         <div className="flex flex-col items-center text-gray-500">
                                             <UploadCloud className="w-12 h-12 mb-2 text-gray-400" />
-                                            <span className="font-semibold text-gray-700 mb-1">Clique para anexar seu {formDados.tipoComprovante}</span>
-                                            <span className="text-xs">Foto legível. Máx 5MB.</span>
+                                            <span className="font-semibold text-gray-700 mb-1">Clique aqui para anexar seu {formDados.tipoComprovante}</span>
+                                            <span className="text-xs">Foto legível. Máx 5 MB</span>
                                         </div>
                                     )}
                                 </label>

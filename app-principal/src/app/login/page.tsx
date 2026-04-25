@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Leaf } from "lucide-react";
 import { useFormik } from "formik";
-// IMPORTANTE: Você precisará ir no arquivo authSchema.ts e remover a obrigatoriedade do CPF e Telefone do cadastroSchema!
 import { loginSchema, cadastroSchema } from "@/schemas/authSchema";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -54,7 +53,7 @@ export default function LoginPage() {
                     if (dados.tipoUser === "produtor") {
                         router.push("/produtor");
                     } else if (dados.tipoUser === "mercado") {
-                        router.push("/checkout");
+                        router.push("/catalogo");
                     } else if (dados.tipoUser === "admin") {
                         router.push("/admin");
                     } else {

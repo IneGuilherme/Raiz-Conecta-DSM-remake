@@ -2,63 +2,71 @@ import { NextResponse } from "next/server";
 
 // ROTA GET: O nosso "Garçom" que serve o catálogo para o mercado
 export async function GET() {
-  // Simulando a busca de um banco de dados
+  // Simulando a busca de um banco de dados com preços médios por KG
   const produtos = [
     {
-      id: 1,
+      cdProduto: 1,
       nome: "Maçã Gala",
       icone: "🍎",
-      unidadePadrao: "Caixas",
+      unidadePadrao: "Kg",
       categoria: "Frutas",
+      preco: 8.5,
     },
     {
-      id: 2,
+      cdProduto: 2,
       nome: "Laranja Pera",
       icone: "🍊",
-      unidadePadrao: "Caixas",
+      unidadePadrao: "Kg",
       categoria: "Frutas",
+      preco: 4.2,
     },
     {
-      id: 3,
+      cdProduto: 3,
       nome: "Banana Prata",
       icone: "🍌",
-      unidadePadrao: "Cachos",
+      unidadePadrao: "Kg",
       categoria: "Frutas",
+      preco: 5.9,
     },
     {
-      id: 4,
+      cdProduto: 4,
       nome: "Alface Crespa",
       icone: "🥬",
-      unidadePadrao: "Maços",
+      unidadePadrao: "Kg",
       categoria: "Verduras",
+      preco: 12.0, // Equivale ao volume em Kg
     },
     {
-      id: 5,
+      cdProduto: 5,
       nome: "Tomate Carmem",
       icone: "🍅",
-      unidadePadrao: "Caixas",
+      unidadePadrao: "Kg",
       categoria: "Legumes",
+      preco: 7.3,
     },
     {
-      id: 6,
+      cdProduto: 6,
       nome: "Cenoura",
       icone: "🥕",
       unidadePadrao: "Kg",
       categoria: "Legumes",
+      preco: 4.8,
     },
     {
-      id: 7,
+      cdProduto: 7,
       nome: "Brócolis",
       icone: "🥦",
-      unidadePadrao: "Maços",
+      unidadePadrao: "Kg",
       categoria: "Verduras",
+      preco: 15.0,
     },
     {
-      id: 8,
+      cdProduto: 8,
       nome: "Melancia",
       icone: "🍉",
-      unidadePadrao: "Unidades",
+      unidadePadrao: "Kg",
       categoria: "Frutas",
+      preco: 2.5,
     },
   ];
 
