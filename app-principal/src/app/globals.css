@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
-/* ====================================================
-   CONFIGURAÇÕES BASE
-==================================================== */
+/* CONFIGURAÇÕES BASE */
 html {
   scroll-behavior: smooth;
 }
@@ -14,9 +12,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ====================================================
-   SCROLLBAR PREMIUM (Barra de rolagem elegante)
-==================================================== */
+/* SCROLLBAR PREMIUM */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -36,9 +32,7 @@ body {
   background: #16a34a;
 }
 
-/* ====================================================
-   ANIMAÇÕES CUSTOMIZADAS (Para a Landing Page)
-==================================================== */
+/* ANIMAÇÕES CUSTOMIZADAS */
 .animate-blob {
   animation: blob 7s infinite;
 }

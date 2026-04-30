@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ⚙️ Configuração do Mailtrap (O "Correio" do nosso sistema)
+// Configuração do Mailtrap (O "Correio" do nosso sistema)
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || "sandbox.smtp.mailtrap.io",
     port: process.env.EMAIL_PORT || 587,
@@ -19,9 +19,8 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// ==========================================
-// 📧 ROTA 1: Boas-vindas (Ao criar a conta)
-// ==========================================
+// ROTA 1: Boas-vindas (Ao criar a conta)
+
 app.post('/api/email/boas-vindas', async (req, res) => {
     const { email, nome } = req.body;
     try {
@@ -44,9 +43,8 @@ app.post('/api/email/boas-vindas', async (req, res) => {
     }
 });
 
-// ==========================================
 // 📧 ROTA 2: Aprovação (Nível Raiz)
-// ==========================================
+
 app.post('/api/email/aprovacao', async (req, res) => {
     const { email } = req.body;
     try {
@@ -72,9 +70,8 @@ app.post('/api/email/aprovacao', async (req, res) => {
     }
 });
 
-// ==========================================
-// 📧 ROTA 3: Rejeição (Documento Inválido)
-// ==========================================
+// ROTA 3: Rejeição (Documento Inválido)
+
 app.post('/api/email/rejeicao', async (req, res) => {
     const { email } = req.body;
     try {
@@ -99,9 +96,8 @@ app.post('/api/email/rejeicao', async (req, res) => {
     }
 });
 
-// ==========================================
 // INICIAR O SERVIDOR
-// ==========================================
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`🚀 Microsserviço de E-mail rodando na porta ${PORT}`);
