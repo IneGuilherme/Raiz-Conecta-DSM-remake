@@ -7,9 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==========================================
 // TABELAS DO RAIZ CONECTA (Baseadas no seu SQL original)
-// ==========================================
 
 model Cliente {
   cdCliente    Int       @id @default(autoincrement())
@@ -207,9 +205,7 @@ model ColetaEntrega {
   Rota         Rota?     @relation(fields: [cdRota], references: [cdRota])
 }
 
-// ==========================================
 // 🔄 FLUXO ATIVO: DEMANDA REVERSA
-// ==========================================
 
 model Demanda {
   id           String   @id @default(uuid())
