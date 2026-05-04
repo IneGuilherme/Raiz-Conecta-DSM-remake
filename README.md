@@ -56,9 +56,9 @@ Administrador aprova usuário → API Principal → Microsserviço (Express.js) 
 
 ## Documentação do Projeto
 
-- **Confluence (Base de Conhecimento):** [Acessar Workspace](https://raizconectado.atlassian.net/jira/projects?page=1&sortKey=name&sortOrder=ASC&types=software%2Cbusiness)
+- **Confluence (Base de Conhecimento):** [Acessar Workspace](https://raizconectado.atlassian.net/wiki/x/AYBF)
 
-- **Jira (Gestão Ágil / Roadmap):** [Acessar Timeline](https://raizconectado.atlassian.net/?continue=https%3A%2F%2Fraizconectado.atlassian.net%2Fwelcome%2Fsoftware%3FprojectId%3D10000&atlOrigin=eyJpIjoiYWM4NjljZDJiNmQ5NGRkZWIyNDI4NzFkZmRlOTNkMzkiLCJwIjoiamlyYS1zb2Z0d2FyZSJ9)
+- **Jira (Gestão Ágil / Roadmap):** [Acessar Timeline](https://raizconectado.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiOTY3Njg2NWQ0NTlhNGFhYWIwNDBiYTUwNDAyMDEwNTIiLCJwIjoiaiJ9)
 
 - **Documento de Requisitos:** Disponível na raiz do repositório (`Doc Projeto Integrador - Raiz Conecta.docx`)
 
@@ -68,10 +68,8 @@ Administrador aprova usuário → API Principal → Microsserviço (Express.js) 
 
 | Nº Sprint | Objetivo | Data Início | Data Término |
 | :---: | :--- | :---: | :---: |
-| **Sprint 1** | Autenticação, cadastro de usuários e modelagem do banco de dados | - | - |
-| **Sprint 2** | Painel do Produtor, Catálogo e gestão de produtos | - | - |
-| **Sprint 3** | Vitrine B2B, Carrinho Inteligente e Checkout (Mercado) | - | - |
-| **Sprint 4** | Microsserviço de E-mail, Validação Admin e Landing Page | - | 05/05/2026 |
+| **Sprint 1** | Autenticação, cadastro de usuários, painel do produtor, vitrine, carrinho, checkout, painel admin, landing page e avaliações | - | - |
+| **Sprint 2** | Melhorias e correções apontadas pela banca avaliadora | - | - |
 
 > Datas precisas e status de cada task disponíveis diretamente no [painel do Jira](https://raizconectado.atlassian.net).
 
@@ -91,11 +89,37 @@ Administrador aprova usuário → API Principal → Microsserviço (Express.js) 
 
 ## Funcionalidades
 
-- **Onboarding e Validação:** Cadastro com autocompletar de endereço via ViaCEP e aprovação manual obrigatória pelo Administrador antes do acesso à plataforma.
-- **Painel do Produtor Rural:** Interface para o agricultor visualizar demandas da região, ofertar produtos de forma fracionada e controlar o estoque de pedidos.
-- **Painel do Mercado (Comprador):** Vitrine digital com busca e filtros, onde o lojista monta seu carrinho e dispara cotações para produtores parceiros.
-- **Sistema de Avaliação Logística:** Após o recebimento, o mercado avalia a qualidade da entrega do produtor de 1 a 5 estrelas.
-- **Central de Administração:** Painel exclusivo para moderar a plataforma, visualizar pedidos globais e gerenciar status de usuários.
+- **Landing Page Pública:** Página de apresentação da plataforma com proposta de valor, fluxo de funcionamento em 3 passos e redirecionamento dinâmico para o painel correto conforme o perfil do usuário logado.
+
+- **Login de Usuário:** Autenticação com e-mail e senha via hash bcrypt, com redirecionamento automático para o painel de Produtor, Mercado ou Administrador.
+
+- **Cadastro de Usuário (Passo 1):** Registro inicial com seleção de perfil (Produtor Rural ou Mercado), criando a conta com status `EM_ANALISE` e disparando e-mail de boas-vindas automaticamente.
+
+- **Completar Perfil / Onboarding (Passo 2):** Segunda etapa obrigatória com preenchimento de CPF/CNPJ, endereço com autocompletar via ViaCEP e upload de documento para validação manual pelo Administrador.
+
+- **Painel Admin — Aprovação de Cadastros:** Interface exclusiva para revisar cadastros pendentes, visualizar documentos enviados e aprovar ou recusar usuários, com disparo automático de e-mail de notificação.
+
+- **Painel Admin — Gestão de Usuários:** Ferramenta de moderação com busca em tempo real, e ações de suspender, reativar ou excluir usuários ativos na plataforma.
+
+- **Catálogo de Produtos (Mercado):** Vitrine com grid de produtos, filtro por categoria (Frutas, Verduras, Legumes), busca em tempo real e controle de quantidade para montar a cotação.
+
+- **Carrinho de Cotação (Mercado):** Painel lateral deslizante para revisar itens selecionados, ajustar quantidades, visualizar total estimado e avançar para o checkout, com persistência via localStorage.
+
+- **Checkout e Disparo de Cotação:** Tela de revisão final com endereço de entrega preenchido automaticamente; ao confirmar, cria uma demanda `ABERTA` no banco para cada item e limpa o carrinho.
+
+- **Acompanhamento de Cotações (Mercado):** Aba com cards por demanda exibindo barra de progresso de preenchimento da carga, lista de produtores que ofertaram e status de cada entrega.
+
+- **Avaliação de Produtor e Entrega:** Após receber um pedido, o mercado confirma o recebimento e avalia o produtor de 1 a 5 estrelas, atualizando o status da entrega para `ENTREGUE`.
+
+- **Mural de Oportunidades (Produtor):** Painel principal do produtor com todas as demandas abertas da região, barra de progresso de preenchimento e campo para registrar uma oferta parcial ou total.
+
+- **Minhas Ofertas Fechadas (Produtor):** Aba histórica com todas as demandas nas quais o produtor já se comprometeu, destacando a quantidade garantida por ele.
+
+- **Meu Perfil — Edição de Dados:** Tela para atualizar nome, telefone, endereço e senha, com e-mail e documento bloqueados para edição.
+
+- **Meu Perfil — Exclusão de Conta:** Autoexclusão permanente com dupla confirmação, limpeza de sessão e redirecionamento para o login, em conformidade com a LGPD.
+
+- **Microsserviço de E-mail:** Serviço Node.js/Express independente que envia e-mails transacionais de boas-vindas, aprovação e rejeição de cadastro, com falha silenciosa para não interromper o fluxo principal.
 
 ---
 
