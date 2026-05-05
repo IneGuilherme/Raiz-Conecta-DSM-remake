@@ -164,6 +164,9 @@ npm install
 npx prisma generate
 npm run dev
 # Disponível em http://localhost:3000
+
+npx prisma studio
+# Disponivel em http://localhost:5555
 ```
 
 **Passo 3 — Rodar o Microsserviço de E-mail (Express.js)**
