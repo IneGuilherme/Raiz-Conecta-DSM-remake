@@ -3,6 +3,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // ROTA GET: Busca TODOS os usuários (produtores e mercados) para exibir na tela de administração
+/**
+ * @swagger
+ *  /api/admin/usuarios:
+ *   get:
+ *    summary: Lista todos os usuários
+ *   responses:
+ *    200:
+ *     description: OK
+ */
 export async function GET() {
   try {
     const produtores = await prisma.vendedor.findMany({
