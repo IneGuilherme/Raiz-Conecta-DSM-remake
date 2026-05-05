@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import swaggerSpec from '@/swagger.json';
 import ReactSwagger from './ReactSwagger';
 

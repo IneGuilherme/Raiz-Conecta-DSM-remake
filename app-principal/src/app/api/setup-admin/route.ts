@@ -18,7 +18,7 @@ export async function GET() {
     await prisma.acesso.create({
       data: {
         login: "admin@raizconecta.com.br", // email do admin
-        hash: "Admin@123", // A senha do admin
+        hash: " ", // A senha do admin
         tipoUser: "admin",
         status: "APROVADO",
       },
