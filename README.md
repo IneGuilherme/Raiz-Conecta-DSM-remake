@@ -4,6 +4,18 @@
 
 ---
 
+## Integrantes do Projeto Integrador - Fatec Votorantim DSM
+
+Guilherme Vinícius Baeza de Oliveira 
+
+Felipe Gomes Félix  
+
+Jhonatan Melo  
+
+Gustavo Henrique Bauch 
+
+Daniel Henrique Nogueira 
+
 ## Visão Geral
 
 Este projeto tem como objetivo desenvolver uma solução completa de software, abrangendo todo o ciclo de vida de desenvolvimento: desde o levantamento de requisitos até a implementação, testes e disponibilização da aplicação.
