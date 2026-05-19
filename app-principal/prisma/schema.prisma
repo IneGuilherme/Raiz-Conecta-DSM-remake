@@ -109,15 +109,18 @@ model Acesso {
 }
 
 model Produto {
-  cdProduto   Int       @id @default(autoincrement())
-  dtCadastro  DateTime? @default(now())
-  nome        String?
-  tipo        String?
-  preco       Float?
-  qtdTotal    Int?
-  dtUltimaAtz DateTime?
-  status      String?
+  cdProduto     Int       @id @default(autoincrement())
+  dtCadastro    DateTime? @default(now())
+  nome          String?
+  tipo          String?
+  preco         Float?
+  qtdTotal      Int?
+  dtUltimaAtz   DateTime?
+  status        String?   @default("ATIVO")
   
+  imagemUrl     String? 
+  unidadePadrao String?
+
   ItensPedido ItemPedido[]
   Estoques    Prod_Vendedor_Possui[]
 
